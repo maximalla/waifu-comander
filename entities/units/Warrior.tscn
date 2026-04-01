@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://b2ntmc51pky0f"]
+
+[ext_resource type="PackedScene" uid="uid://b2ofkki87dnc0" path="res://entities/units/BaseUnit.tscn" id="1_kjye7"]
+[ext_resource type="Script" uid="uid://cn7wgqrub0pxn" path="res://entities/units/Warrior.gd" id="2_13sk1"]
+[ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="3_mojf1"]
+[ext_resource type="Resource" uid="uid://7nkw3lt8dgmd" path="res://entities/skills/MeleeAttack.tres" id="4_fbof8"]
+
+[node name="Warrior" unique_id=756538143 instance=ExtResource("1_kjye7")]
+script = ExtResource("2_13sk1")
+skills = Array[ExtResource("3_mojf1")]([ExtResource("4_fbof8")])
+
+[node name="Sprite2D" parent="." index="0" unique_id=821534345]
+position = Vector2(1568, 919)
+
+[node name="APBar" parent="." index="1" unique_id=1610466873]
+metadata/_edit_use_anchors_ = true
+
+[node name="APLabel" parent="." index="2" unique_id=1751931704]
+metadata/_edit_use_anchors_ = true
+
+[node name="HPBar" parent="." index="3" unique_id=2075376138]
+metadata/_edit_use_anchors_ = true
+
+[node name="HPLabel" parent="." index="4" unique_id=63060593]
+metadata/_edit_use_anchors_ = true

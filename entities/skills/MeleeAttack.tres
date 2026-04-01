@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Skill" format=3 uid="uid://7nkw3lt8dgmd"]
+
+[ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="1_jfrt1"]
+
+[resource]
+script = ExtResource("1_jfrt1")
+skill_name = "Удар мечем"
+ap_cost = 4
+range = 1
+base_damage = 4
+metadata/_custom_type_script = "uid://bsupe57veabt7"

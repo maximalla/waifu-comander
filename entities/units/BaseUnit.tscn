@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://b2ofkki87dnc0"]
+
+[ext_resource type="Script" uid="uid://ircyhirwb5xh" path="res://entities/units/BaseUnit.gd" id="1_k5kjm"]
+[ext_resource type="Texture2D" uid="uid://bfkb1dhhyclql" path="res://assets/textures/units/humans/warrior.png" id="2_w8ddn"]
+
+[node name="Unit" type="Node2D" unique_id=756538143]
+y_sort_enabled = true
+script = ExtResource("1_k5kjm")
+size = Vector2i(2, 2)
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=821534345]
+position = Vector2(665, 451)
+texture = ExtResource("2_w8ddn")
+
+[node name="APBar" type="ProgressBar" parent="." unique_id=1610466873]
+modulate = Color(1, 1, 0.078431375, 1)
+offset_right = 4.0
+offset_bottom = 27.0
+show_percentage = false
+
+[node name="APLabel" type="Label" parent="." unique_id=1751931704]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="." unique_id=2075376138]
+offset_right = 4.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 12
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="." unique_id=63060593]
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_font_sizes/font_size = 10
+horizontal_alignment = 1
+vertical_alignment = 1

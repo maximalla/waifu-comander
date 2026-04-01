@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Skill" format=3 uid="uid://78h1ij61ll7d"]
+
+[ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="1_ugx63"]
+
+[resource]
+script = ExtResource("1_ugx63")
+skill_name = "Постріл з лука"
+ap_cost = 4
+range = 5
+base_damage = 3
+metadata/_custom_type_script = "uid://bsupe57veabt7"

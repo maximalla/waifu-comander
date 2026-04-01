@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d0f081qwke7le"]
+
+[ext_resource type="Script" uid="uid://c2hh4n6j7le4q" path="res://entities/environment/Obstacle.gd" id="1_nfn2k"]
+
+[node name="Obstacle" type="Sprite2D" unique_id=1796956673]
+script = ExtResource("1_nfn2k")

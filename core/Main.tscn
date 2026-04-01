@@ -1,0 +1,124 @@
+[gd_scene format=3 uid="uid://du6xukpttxp5j"]
+
+[ext_resource type="Script" uid="uid://yw6rxbj85ib7" path="res://core/Main.gd" id="1_5id70"]
+[ext_resource type="PackedScene" uid="uid://6q0st4lfraqq" path="res://entities/units/Archer.tscn" id="2_81sye"]
+[ext_resource type="PackedScene" uid="uid://b2ntmc51pky0f" path="res://entities/units/Warrior.tscn" id="3_btyjs"]
+[ext_resource type="Script" uid="uid://dbsgxdgbc2qob" path="res://core/Grid.gd" id="4_djhfk"]
+[ext_resource type="PackedScene" uid="uid://d0f081qwke7le" path="res://entities/environment/Obstacle.tscn" id="5_5rkby"]
+[ext_resource type="Texture2D" uid="uid://c1owpc5nbunh3" path="res://assets/textures/environment/obstacles/tree1.png" id="6_m8xq2"]
+[ext_resource type="Texture2D" uid="uid://c74nqwlku8j0p" path="res://assets/textures/environment/obstacles/tree2.png" id="7_p584m"]
+[ext_resource type="Texture2D" uid="uid://dvixyvv7kc2i3" path="res://assets/textures/environment/obstacles/rock1.png" id="8_15anw"]
+[ext_resource type="Texture2D" uid="uid://ccwcw2wgbmjgr" path="res://assets/textures/environment/obstacles/rock2.png" id="9_ui2v5"]
+[ext_resource type="Script" uid="uid://ch7h5wdg0bp1p" path="res://core/BattleUI.gd" id="10_81sye"]
+[ext_resource type="Script" uid="uid://dr2bf8nyiikcg" path="res://core/TacticalCamera.gd" id="10_qxqye"]
+[ext_resource type="Script" uid="uid://13u1ctgge4us" path="res://core/MapGenerator.gd" id="11_jg3kx"]
+
+[node name="Main" type="Node2D" unique_id=2068877941]
+script = ExtResource("1_5id70")
+player_roster = Array[PackedScene]([ExtResource("2_81sye"), ExtResource("2_81sye"), ExtResource("3_btyjs")])
+enemy_roster = Array[PackedScene]([ExtResource("2_81sye"), ExtResource("3_btyjs")])
+
+[node name="Grid" type="Node2D" parent="." unique_id=1614167976]
+y_sort_enabled = true
+script = ExtResource("4_djhfk")
+obstacle_scene = ExtResource("5_5rkby")
+tex_high_covers = Array[Texture2D]([ExtResource("6_m8xq2"), ExtResource("7_p584m")])
+tex_low_covers = Array[Texture2D]([ExtResource("8_15anw"), ExtResource("9_ui2v5")])
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=348072489]
+offset = Vector2(500, 80)
+transform = Transform2D(1, 0, 0, 1, 500, 80)
+script = ExtResource("10_81sye")
+
+[node name="Panel" type="Panel" parent="UI" unique_id=29692647]
+custom_minimum_size = Vector2(0, 80)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -560.0
+offset_right = 560.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/Panel" unique_id=1604898050]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.933
+offset_left = -488.0
+offset_top = -180.0
+offset_right = -435.96008
+offset_bottom = -140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BtnAttack" type="Button" parent="UI/Panel/HBoxContainer" unique_id=1096888924]
+custom_minimum_size = Vector2(200, 80)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Атака"
+
+[node name="BtnEndTurn" type="Button" parent="UI/Panel/HBoxContainer" unique_id=1779609465]
+custom_minimum_size = Vector2(200, 80)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "Кінець ходу"
+
+[node name="HitChanceLabel" type="Label" parent="UI" unique_id=2094209340]
+visible = false
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+
+[node name="TargetPanel" type="Panel" parent="UI" unique_id=420492916]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -722.0
+offset_top = -288.0
+offset_right = -504.0
+offset_bottom = 99.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/TargetPanel" unique_id=745099063]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="LblName" type="Label" parent="UI/TargetPanel/VBoxContainer" unique_id=203931419]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="LblHit" type="Label" parent="UI/TargetPanel/VBoxContainer" unique_id=1307664926]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="LblDmg" type="Label" parent="UI/TargetPanel/VBoxContainer" unique_id=207596909]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="LblCrit" type="Label" parent="UI/TargetPanel/VBoxContainer" unique_id=1460216220]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1906602550]
+position_smoothing_enabled = true
+script = ExtResource("10_qxqye")
+
+[node name="MapGenerator" type="Node" parent="." unique_id=181004093 node_paths=PackedStringArray("grid", "main_node")]
+script = ExtResource("11_jg3kx")
+grid = NodePath("../Grid")
+main_node = NodePath("..")
+
+[connection signal="pressed" from="UI/Panel/HBoxContainer/BtnEndTurn" to="." method="_on_button_pressed"]
