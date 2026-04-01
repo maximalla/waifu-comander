@@ -1,11 +1,11 @@
 class_name BattleUI
 extends CanvasLayer
 
-signal attack_pressed
+signal skill_selected(skill: Skill)
 signal end_turn_pressed
 
 @onready var panel = $Panel
-@onready var btn_attack = $Panel/HBoxContainer/BtnAttack
+@onready var hbox = $Panel/HBoxContainer
 @onready var btn_end_turn = $Panel/HBoxContainer/BtnEndTurn
 
 # Елементи мобільного інтерфейсу (Панель цілі)
@@ -22,7 +22,7 @@ signal end_turn_pressed
 var is_mobile := false
 
 func _ready():
-	btn_attack.pressed.connect(func(): attack_pressed.emit())
+
 	btn_end_turn.pressed.connect(func(): end_turn_pressed.emit())
 	
 	var os_name = OS.get_name()
@@ -36,20 +36,37 @@ func _adapt_ui_for_platform():
 	if is_mobile:
 		panel.custom_minimum_size.y = 150
 		panel.size.y = 150
-		btn_attack.custom_minimum_size.y = 100
 		btn_end_turn.custom_minimum_size.y = 100
-		btn_attack.add_theme_font_size_override("font_size", 40)
 		btn_end_turn.add_theme_font_size_override("font_size", 40)
 	else:
 		panel.custom_minimum_size.y = 80
 		panel.size.y = 80
-		btn_attack.custom_minimum_size.y = 0
 		btn_end_turn.custom_minimum_size.y = 0
-		btn_attack.add_theme_font_size_override("font_size", 24)
 		btn_end_turn.add_theme_font_size_override("font_size", 24)
 
+func setup_skill_buttons(skills: Array[Skill]):
+	# Видалити старі кнопки, крім BtnEndTurn
+	for child in hbox.get_children():
+		if child != btn_end_turn:
+			child.queue_free()
+	
+	# Створити нові кнопки для скілів
+	for skill in skills:
+		var btn = Button.new()
+		btn.text = skill.skill_name
+		if skill.current_cooldown > 0:
+			btn.disabled = true
+			btn.text += " (" + str(skill.current_cooldown) + ")"
+		else:
+			btn.disabled = false
+		
+		btn.pressed.connect(func(): skill_selected.emit(skill))
+		hbox.add_child(btn)
+		hbox.move_child(btn, hbox.get_child_count() - 2)  # Перед BtnEndTurn
+
+
 func release_focuses():
-	btn_attack.release_focus()
+	# btn_attack.release_focus()
 	btn_end_turn.release_focus()
 
 # ==========================================

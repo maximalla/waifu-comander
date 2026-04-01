@@ -13,6 +13,7 @@ var units := []
 var current_index := 0
 var active_unit: Node2D
 var targeted_enemy: Node2D = null # Ворог, якого ми виділили для атаки
+var active_skill: Skill = null
 
 var is_moving := false
 var current_action := "move" # Стан: "move", "attack" тощо
@@ -23,7 +24,7 @@ var current_action := "move" # Стан: "move", "attack" тощо
 func _ready():
 	# Підключення кнопок UI
 	$UI.end_turn_pressed.connect(skip_turn)
-	$UI.attack_pressed.connect(_on_btn_attack_pressed)
+	$UI.skill_selected.connect(_on_skill_selected)
 	
 	# Налаштування камери
 	var map_width = $Grid.grid_size.x * $Grid.cell_size
@@ -56,14 +57,28 @@ func _process(_delta):
 	if not $UI.is_mobile:
 		$UI.hide_hover_label() # Ховаємо текст кожен кадр
 		
-		if current_action == "attack" and is_instance_valid(active_unit) and not is_moving:
+		if current_action == "use_skill" and is_instance_valid(active_unit) and not is_moving and active_skill:
 			var m_cell = $Grid.world_to_cell($Grid.get_local_mouse_position())
 			var hovered_unit = $Grid.get_unit_at(m_cell)
 			
-			if hovered_unit and hovered_unit.team != active_unit.team and hovered_unit.current_hp > 0:
-				if active_unit.is_in_attack_range(hovered_unit):
-					var chance = active_unit.get_hit_chance(hovered_unit)
-					$UI.show_hover_label(chance) # Показуємо, якщо навели на ворога
+			if hovered_unit and hovered_unit.current_hp > 0:
+				var dist = active_unit.distance_to_cell(hovered_unit.grid_position)
+				if dist <= active_skill.range:
+					# Перевірка типу цілі
+					var valid = false
+					match active_skill.target_type:
+						Skill.TargetType.ENEMY:
+							if hovered_unit.team != active_unit.team:
+								valid = true
+						Skill.TargetType.ALLY:
+							if hovered_unit.team == active_unit.team:
+								valid = true
+						Skill.TargetType.SELF:
+							if hovered_unit == active_unit:
+								valid = true
+					if valid:
+						var chance = active_unit.get_hit_chance(hovered_unit) # Можливо, треба адаптувати для скілів
+						$UI.show_hover_label(chance) # Показуємо, якщо навели на ціль
 
 func _unhandled_input(event):
 	if is_moving or (active_unit and active_unit.team != 0):
@@ -93,7 +108,7 @@ func _unhandled_input(event):
 			match current_action:
 				"move":
 					_handle_move_action(m_cell, clicked_unit)
-				"attack":
+				"use_skill":
 					_handle_attack_action(clicked_unit)
 
 # ==========================================
@@ -129,55 +144,47 @@ func _handle_move_action(m_cell: Vector2i, clicked_unit: Node2D):
 				next_turn()
 
 func _handle_attack_action(clicked_unit: Node2D):
-	if not clicked_unit or clicked_unit.team == active_unit.team:
+	if not clicked_unit:
 		targeted_enemy = null
 		$UI.hide_target_panel()
 		current_action = "move"
 		active_unit.calculate_reachable_cells()
 		return
 
-	if active_unit.is_in_attack_range(clicked_unit):
-		# ==========================================
-		# ФАЗА 1: ПРИЦІЛЮВАННЯ (ТІЛЬКИ ДЛЯ МОБІЛОК)
-		# ==========================================
-		if $UI.is_mobile:
-			# Якщо це перший тап по цьому ворогу - показуємо панель і зупиняємось
-			if targeted_enemy != clicked_unit:
-				targeted_enemy = clicked_unit
-				var chance = active_unit.get_hit_chance(clicked_unit)
-				$UI.show_target_panel("Ворог", chance, active_unit.melee_damage, active_unit.crit_chance)
+	var dist = active_unit.distance_to_cell(clicked_unit.grid_position)
+	if dist > active_skill.range:
+		return
+
+	# Перевірка типу цілі
+	match active_skill.target_type:
+		Skill.TargetType.ENEMY:
+			if clicked_unit.team == active_unit.team:
+				return
+		Skill.TargetType.ALLY:
+			if clicked_unit.team != active_unit.team:
+				return
+		Skill.TargetType.SELF:
+			if clicked_unit != active_unit:
 				return
 
-		# ==========================================
-		# ФАЗА 2: АТАКА (Для ПК або 2-й тап мобілки)
-		# ==========================================
-		# Ми атакуємо, якщо ми на ПК, АБО якщо на мобілці ми тапнули по тій самій цілі вдруге
-		if not $UI.is_mobile or targeted_enemy == clicked_unit:
-			if active_unit.current_ap >= active_unit.attack_ap_cost:
-				$UI.hide_target_panel()
-				targeted_enemy = null
-				
-				var dist = active_unit.distance_to_cell(clicked_unit.grid_position)
-				
-				if dist > 1:
-					var los_data = active_unit.check_los(clicked_unit)
-					if not los_data.can_see: return
-					await active_unit.execute_ranged_attack(clicked_unit, los_data)
-				else:
-					await active_unit.execute_melee_attack(clicked_unit)
-				
-				if clicked_unit.current_hp <= 0:
-					units.erase(clicked_unit)
-					await clicked_unit.die()
-				
-				current_action = "move"
-				if active_unit.current_ap <= 0:
-					active_unit.is_exhausted = true
-					next_turn()
-				else:
-					active_unit.calculate_reachable_cells()
-			else:
-				print("Недостатньо AP!")
+	if active_unit.current_ap >= active_skill.ap_cost:
+		$UI.hide_target_panel()
+		targeted_enemy = null
+		
+		await active_unit.use_skill(clicked_unit, active_skill)
+		
+		if clicked_unit.current_hp <= 0:
+			units.erase(clicked_unit)
+			await clicked_unit.die()
+		
+		current_action = "move"
+		if active_unit.current_ap <= 0:
+			active_unit.is_exhausted = true
+			next_turn()
+		else:
+			active_unit.calculate_reachable_cells()
+	else:
+		print("Недостатньо AP!")
 
 # ==========================================
 # УПРАВЛІННЯ ХОДАМИ
@@ -187,6 +194,7 @@ func start_turn():
 	
 	active_unit = units[current_index]
 	active_unit.reset_ap()
+	$UI.setup_skill_buttons(active_unit.skills)
 	active_unit.calculate_reachable_cells()
 	
 	$Grid.hover_cell = active_unit.grid_position
@@ -204,6 +212,13 @@ func start_turn():
 		is_moving = false
 		next_turn()
 
+func _on_skill_selected(skill: Skill):
+	current_action = "use_skill"
+	active_skill = skill
+	# Підсвітити зону застосування скілу
+	var target_cells = active_unit.get_skill_target_cells(skill)
+	$Grid.set_highlight(target_cells, active_unit.size)
+		
 func next_turn():
 	if is_instance_valid(active_unit):
 		active_unit.is_exhausted = true
