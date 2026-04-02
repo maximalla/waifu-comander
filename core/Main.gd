@@ -217,8 +217,9 @@ func _on_skill_selected(skill: Skill):
 	active_skill = skill
 	# Підсвітити зону застосування скілу
 	var target_cells = active_unit.get_skill_target_cells(skill)
-	$Grid.set_highlight(target_cells, active_unit.size)
-		
+	var red_color = Color(0.8, 0.1, 0.1, 0.5)
+	$Grid.set_highlight(target_cells, Vector2i(1, 1), red_color)
+
 func next_turn():
 	if is_instance_valid(active_unit):
 		active_unit.is_exhausted = true
