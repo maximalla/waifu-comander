@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="Skill" format=3 uid="uid://dp4bbjtae4pq0"]
+
+[ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="1_uy20w"]
+
+[resource]
+script = ExtResource("1_uy20w")
+skill_name = "Лікування"
+ap_cost = 4
+range = 3
+base_damage = -3
+max_cooldown = 2
+target_type = 1
+metadata/_custom_type_script = "uid://bsupe57veabt7"
