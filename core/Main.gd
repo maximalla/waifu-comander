@@ -217,8 +217,14 @@ func _on_skill_selected(skill: Skill):
 	active_skill = skill
 	# Підсвітити зону застосування скілу
 	var target_cells = active_unit.get_skill_target_cells(skill)
-	var red_color = Color(0.8, 0.1, 0.1, 0.5)
-	$Grid.set_highlight(target_cells, Vector2i(1, 1), red_color)
+	
+	var color = Color(0, 1, 0, 0.15) # За замовчуванням - зелений
+	if skill.target_type == Skill.TargetType.ENEMY:
+		color = Color(0.8, 0.1, 0.1, 0.5)
+	else:
+		color = Color(0.1, 0.8, 0.1, 0.5)
+
+	$Grid.set_highlight(target_cells, Vector2i(1, 1), color) # Vector2i(1, 1) розмір підсвітки, впливає на range скілів, color - колір підсвітки
 
 func next_turn():
 	if is_instance_valid(active_unit):
