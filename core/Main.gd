@@ -17,6 +17,7 @@ var active_skill: Skill = null
 
 var is_moving := false
 var current_action := "move" # Стан: "move", "attack" тощо
+var is_auto_aiming := false # Запам'ятовує, чи гра сама перемкнулася на атаку
 
 # ==========================================
 # ВБУДОВАНІ ФУНКЦІЇ GODOT
@@ -53,34 +54,58 @@ func _process(_delta):
 			$Grid.hover_cell = tl_cell
 			$Grid.queue_redraw()
 
-	# --- ЛОГІКА ХОВЕРУ (ТІЛЬКИ ДЛЯ ПК!) ---
+	# --- ЛОГІКА ХОВЕРУ ТА АВТО-ПРИЦІЛЮВАННЯ (ТІЛЬКИ ДЛЯ ПК!) ---
 	if not $UI.is_mobile:
 		$UI.hide_hover_label() # Ховаємо текст кожен кадр
 		
-		if current_action == "use_skill" and is_instance_valid(active_unit) and not is_moving and active_skill:
-			var m_cell = $Grid.world_to_cell($Grid.get_local_mouse_position())
-			var hovered_unit = $Grid.get_unit_at(m_cell)
+		var m_cell = $Grid.world_to_cell($Grid.get_local_mouse_position())
+		var hovered_unit = $Grid.get_unit_at(m_cell)
+		var is_hovering_enemy = hovered_unit and hovered_unit.team != active_unit.team and hovered_unit.current_hp > 0
+		
+		# ==========================================
+		# ЧАСТИНА 1: Автоматичне перемикання move <-> use_skill
+		# ==========================================
+		if is_instance_valid(active_unit) and not is_moving:
+			# Якщо ми в русі і навели на ворога -> Вмикаємо авто-атаку
+			if current_action == "move" and is_hovering_enemy:
+				if active_unit.skills.size() > 0:
+					var first_skill = active_unit.skills[0]
+					if first_skill.target_type == Skill.TargetType.ENEMY:
+						is_auto_aiming = true
+						active_skill = first_skill
+						current_action = "use_skill"
+						var target_cells = active_unit.get_skill_target_cells(first_skill)
+						$Grid.set_highlight(target_cells, Vector2i(1, 1), Color(0.8, 0.1, 0.1, 0.5))
 			
+			# Якщо ми в авто-атаці і відвели мишку від ворога -> Повертаємось до руху
+			elif current_action == "use_skill" and is_auto_aiming and not is_hovering_enemy:
+				is_auto_aiming = false
+				active_skill = null
+				current_action = "move"
+				active_unit.calculate_reachable_cells()
+
+		# ==========================================
+		# ЧАСТИНА 2: Відображення шансу влучання
+		# ==========================================
+		if current_action == "use_skill" and is_instance_valid(active_unit) and not is_moving and active_skill:
 			if hovered_unit and hovered_unit.current_hp > 0:
 				var min_dist = _get_min_distance_to_unit(active_unit, hovered_unit)
 				
 				if min_dist <= active_skill.range:
-					# Перевірка типу цілі
 					var valid = false
 					match active_skill.target_type:
 						Skill.TargetType.ENEMY:
-							if hovered_unit.team != active_unit.team:
-								valid = true
+							if hovered_unit.team != active_unit.team: valid = true
 						Skill.TargetType.ALLY:
-							if hovered_unit.team == active_unit.team:
-								valid = true
+							if hovered_unit.team == active_unit.team: valid = true
 						Skill.TargetType.SELF:
-							if hovered_unit == active_unit:
-								valid = true
+							if hovered_unit == active_unit: valid = true
+							
 					if valid:
-						var chance = active_unit.get_hit_chance(hovered_unit) # Можливо, треба адаптувати для скілів
-						$UI.show_hover_label(chance) # Показуємо, якщо навели на ціль
-
+						# Тут використовуй свою функцію розрахунку шансу
+						var chance = active_unit.get_hit_chance(hovered_unit)
+						$UI.show_hover_label(chance)
+						
 func _unhandled_input(event):
 	if is_moving or (active_unit and active_unit.team != 0):
 		return
