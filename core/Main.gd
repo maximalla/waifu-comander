@@ -62,8 +62,9 @@ func _process(_delta):
 			var hovered_unit = $Grid.get_unit_at(m_cell)
 			
 			if hovered_unit and hovered_unit.current_hp > 0:
-				var dist = active_unit.distance_to_cell(hovered_unit.grid_position)
-				if dist <= active_skill.range:
+				var min_dist = _get_min_distance_to_unit(active_unit, hovered_unit)
+				
+				if min_dist <= active_skill.range:
 					# Перевірка типу цілі
 					var valid = false
 					match active_skill.target_type:
@@ -107,16 +108,26 @@ func _unhandled_input(event):
 			
 			match current_action:
 				"move":
-					_handle_move_action(m_cell, clicked_unit)
+					await _handle_move_action(m_cell, clicked_unit)
 				"use_skill":
-					_handle_attack_action(clicked_unit)
+					await _handle_attack_action(clicked_unit)
 
 # ==========================================
 # ЛОГІКА ДІЙ (Рух та Атака)
 # ==========================================
-func _handle_move_action(m_cell: Vector2i, clicked_unit: Node2D):
+func _handle_move_action(m_cell: Vector2i, clicked_unit: Node2D) -> void:
 	# ФІКС 1: Блокуємо рух, ТІЛЬКИ якщо клікнули на ІНШОГО юніта
 	if clicked_unit != null and clicked_unit != active_unit:
+		# Перевіряємо чи можна автоматично атакувати першим скілом
+		if clicked_unit.team != active_unit.team and active_unit.skills.size() > 0:
+			var first_skill = active_unit.skills[0]
+			if first_skill.target_type == Skill.TargetType.ENEMY:
+				var min_dist = _get_min_distance_to_unit(active_unit, clicked_unit)
+				if min_dist <= first_skill.range and active_unit.current_ap >= first_skill.ap_cost:
+					# Автоматично атакуємо першим скілом!
+					active_skill = first_skill
+					await _handle_attack_action(clicked_unit)
+					return
 		return
 		
 	var target_tl = $Grid.get_top_left_from_mouse(m_cell, active_unit.size)
@@ -143,7 +154,7 @@ func _handle_move_action(m_cell: Vector2i, clicked_unit: Node2D):
 			if active_unit.reachable_cells.is_empty():
 				next_turn()
 
-func _handle_attack_action(clicked_unit: Node2D):
+func _handle_attack_action(clicked_unit: Node2D) -> void:
 	if not clicked_unit:
 		targeted_enemy = null
 		$UI.hide_target_panel()
@@ -151,8 +162,8 @@ func _handle_attack_action(clicked_unit: Node2D):
 		active_unit.calculate_reachable_cells()
 		return
 
-	var dist = active_unit.distance_to_cell(clicked_unit.grid_position)
-	if dist > active_skill.range:
+	var min_dist = _get_min_distance_to_unit(active_unit, clicked_unit)
+	if min_dist > active_skill.range:
 		return
 
 	# Перевірка типу цілі
@@ -185,6 +196,16 @@ func _handle_attack_action(clicked_unit: Node2D):
 			active_unit.calculate_reachable_cells()
 	else:
 		print("Недостатньо AP!")
+
+func _get_min_distance_to_unit(attacking_unit: Node2D, target_unit: Node2D) -> int:
+	var min_dist = 9999
+	for tx in range(target_unit.size.x):
+		for ty in range(target_unit.size.y):
+			var target_cell = target_unit.grid_position + Vector2i(tx, ty)
+			var dist = attacking_unit.distance_to_cell(target_cell)
+			if dist < min_dist:
+				min_dist = dist
+	return min_dist
 
 # ==========================================
 # УПРАВЛІННЯ ХОДАМИ
