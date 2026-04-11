@@ -22,7 +22,6 @@ signal end_turn_pressed
 var is_mobile := false
 
 func _ready():
-
 	btn_end_turn.pressed.connect(func(): end_turn_pressed.emit())
 	
 	var os_name = OS.get_name()
@@ -50,10 +49,17 @@ func setup_skill_buttons(skills: Array[Skill]):
 		if child != btn_end_turn:
 			child.queue_free()
 	
-	# Створити нові кнопки для скілів
-	for skill in skills:
+	# Створити нові кнопки для скілів, ПОЧИНАЮЧИ З ІНДЕКСУ 1
+	for i in range(1, skills.size()):
+		var skill = skills[i]
+		
 		var btn = Button.new()
 		btn.text = skill.skill_name
+		
+		# Красивий шрифт для нових кнопок (опціонально, щоб відповідали дизайну)
+		btn.add_theme_font_size_override("font_size", 24)
+		btn.custom_minimum_size.x = 120
+		
 		if skill.current_cooldown > 0:
 			btn.disabled = true
 			btn.text += " (" + str(skill.current_cooldown) + ")"
@@ -62,8 +68,7 @@ func setup_skill_buttons(skills: Array[Skill]):
 		
 		btn.pressed.connect(func(): skill_selected.emit(skill))
 		hbox.add_child(btn)
-		hbox.move_child(btn, hbox.get_child_count() - 2)  # Перед BtnEndTurn
-
+		hbox.move_child(btn, hbox.get_child_count() - 2) # Перед BtnEndTurn
 
 func release_focuses():
 	# btn_attack.release_focus()
@@ -97,8 +102,8 @@ func show_hover_label(chance: int):
 		hover_label.visible = true
 		hover_label.global_position = hover_label.get_global_mouse_position() + Vector2(20, -30)
 		
-		if chance >= 70: hover_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2)) 
-		elif chance >= 40: hover_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.2)) 
+		if chance >= 70: hover_label.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
+		elif chance >= 40: hover_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.2))
 		else: hover_label.add_theme_color_override("font_color", Color(0.9, 0.2, 0.2))
 	else:
 		hide_hover_label()
