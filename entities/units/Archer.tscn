@@ -4,8 +4,8 @@
 [ext_resource type="Script" uid="uid://db8cux0jclkr3" path="res://entities/units/Archer.gd" id="2_3lvsr"]
 [ext_resource type="PackedScene" uid="uid://dg02jciq44y1w" path="res://entities/projectiles/Projectile.tscn" id="3_2cmh8"]
 [ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="3_pmapi"]
-[ext_resource type="Texture2D" uid="uid://djivifqb4y8i" path="res://assets/textures/units/humans/archer.png" id="3_r2et3"]
 [ext_resource type="Resource" uid="uid://78h1ij61ll7d" path="res://entities/skills/BowShot.tres" id="4_7e6tb"]
+[ext_resource type="Texture2D" uid="uid://cxnx2pkwv8nme" path="res://assets/textures/units/elves/elf archer.png" id="6_pmapi"]
 
 [node name="Archer" unique_id=756538143 instance=ExtResource("1_hgo2b")]
 script = ExtResource("2_3lvsr")
@@ -16,5 +16,5 @@ skills = Array[ExtResource("3_pmapi")]([ExtResource("4_7e6tb")])
 projectile_scene = ExtResource("3_2cmh8")
 
 [node name="Sprite2D" parent="." index="0" unique_id=821534345]
-position = Vector2(1118, 578)
-texture = ExtResource("3_r2et3")
+position = Vector2(-421, 486)
+texture = ExtResource("6_pmapi")

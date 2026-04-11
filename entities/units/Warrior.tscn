@@ -5,13 +5,15 @@
 [ext_resource type="Script" uid="uid://bsupe57veabt7" path="res://entities/skills/Skill.gd" id="3_mojf1"]
 [ext_resource type="Resource" uid="uid://7nkw3lt8dgmd" path="res://entities/skills/MeleeAttack.tres" id="4_fbof8"]
 [ext_resource type="Resource" uid="uid://dp4bbjtae4pq0" path="res://entities/skills/Heal.tres" id="5_fbof8"]
+[ext_resource type="Texture2D" uid="uid://clai2egyt6gy0" path="res://assets/textures/units/elves/elf swordmaster.png" id="6_kve1q"]
 
 [node name="Warrior" unique_id=756538143 instance=ExtResource("1_kjye7")]
 script = ExtResource("2_13sk1")
 skills = Array[ExtResource("3_mojf1")]([ExtResource("4_fbof8"), ExtResource("5_fbof8")])
 
 [node name="Sprite2D" parent="." index="0" unique_id=821534345]
-position = Vector2(1568, 919)
+position = Vector2(968, 722)
+texture = ExtResource("6_kve1q")
 
 [node name="APBar" parent="." index="1" unique_id=1610466873]
 metadata/_edit_use_anchors_ = true
