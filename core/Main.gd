@@ -19,6 +19,13 @@ var is_moving := false
 var current_action := "move" # Стан: "move", "attack" тощо
 var is_auto_aiming := false # Запам'ятовує, чи гра сама перемкнулася на атаку
 
+# Змінні для мобільного керування (Long Press)
+var touch_start_time: int = 0
+var touch_start_pos: Vector2 = Vector2.ZERO
+var is_touching := false
+var long_press_triggered := false
+const LONG_PRESS_TIME_MS := 500
+
 # ==========================================
 # ВБУДОВАНІ ФУНКЦІЇ GODOT
 # ==========================================
@@ -54,6 +61,44 @@ func _process(_delta):
 			$Grid.hover_cell = tl_cell
 			$Grid.queue_redraw()
 
+	# --- МОБІЛЬНА ЛОГІКА: Довгий натиск (Target Panel) ---
+	if $UI.is_mobile and is_touching and not long_press_triggered:
+		if Time.get_ticks_msec() - touch_start_time > LONG_PRESS_TIME_MS:
+			long_press_triggered = true
+			if is_instance_valid(active_unit) and not active_unit.is_exhausted:
+				# Переводимо координати екрана у координати ігрового світу
+				var canvas_transform = get_canvas_transform()
+				var world_pos = canvas_transform.affine_inverse() * touch_start_pos
+				var m_cell = $Grid.world_to_cell($Grid.to_local(world_pos))
+				var hovered_unit = $Grid.get_unit_at(m_cell)
+				
+				if hovered_unit and hovered_unit.team != active_unit.team and hovered_unit.current_hp > 0:
+					var first_skill = active_unit.skills[0] if active_unit.skills.size() > 0 else null
+					if first_skill and first_skill.target_type == Skill.TargetType.ENEMY:
+						# ==========================================
+						# 1. ЗАВЖДИ вмикаємо режим атаки і малюємо зону 
+						# (навіть якщо ворог далеко)
+						# ==========================================
+						current_action = "use_skill"
+						active_skill = first_skill
+						var target_cells = active_unit.get_skill_target_cells(first_skill)
+						$Grid.set_highlight(target_cells, Vector2i(1, 1), Color(0.8, 0.1, 0.1, 0.5))
+						
+						# ==========================================
+						# 2. ПОТІМ перевіряємо, чи дістаємо, щоб показати UI
+						# ==========================================
+						var min_dist = _get_min_distance_to_unit(active_unit, hovered_unit)
+						if min_dist <= first_skill.range:
+							var chance = active_unit.get_hit_chance(hovered_unit)
+							var expected_dmg = abs(first_skill.base_damage)
+							var crit = active_unit.crit_chance
+							$UI.show_target_panel(hovered_unit.name, chance, expected_dmg, crit)
+							targeted_enemy = hovered_unit
+						else:
+							# Якщо ворог далеко, ховаємо панель (якщо вона була відкрита)
+							$UI.hide_target_panel()
+							targeted_enemy = null
+
 	# --- ЛОГІКА ХОВЕРУ ТА АВТО-ПРИЦІЛЮВАННЯ (ТІЛЬКИ ДЛЯ ПК!) ---
 	if not $UI.is_mobile:
 		$UI.hide_hover_label() # Ховаємо текст кожен кадр
@@ -62,11 +107,8 @@ func _process(_delta):
 		var hovered_unit = $Grid.get_unit_at(m_cell)
 		var is_hovering_enemy = hovered_unit and hovered_unit.team != active_unit.team and hovered_unit.current_hp > 0
 		
-		# ==========================================
 		# ЧАСТИНА 1: Автоматичне перемикання move <-> use_skill
-		# ==========================================
 		if is_instance_valid(active_unit) and not is_moving:
-			# Якщо ми в русі і навели на ворога -> Вмикаємо авто-атаку
 			if current_action == "move" and is_hovering_enemy:
 				if active_unit.skills.size() > 0:
 					var first_skill = active_unit.skills[0]
@@ -77,16 +119,13 @@ func _process(_delta):
 						var target_cells = active_unit.get_skill_target_cells(first_skill)
 						$Grid.set_highlight(target_cells, Vector2i(1, 1), Color(0.8, 0.1, 0.1, 0.5))
 			
-			# Якщо ми в авто-атаці і відвели мишку від ворога -> Повертаємось до руху
 			elif current_action == "use_skill" and is_auto_aiming and not is_hovering_enemy:
 				is_auto_aiming = false
 				active_skill = null
 				current_action = "move"
 				active_unit.calculate_reachable_cells()
 
-		# ==========================================
 		# ЧАСТИНА 2: Відображення шансу влучання
-		# ==========================================
 		if current_action == "use_skill" and is_instance_valid(active_unit) and not is_moving and active_skill:
 			if hovered_unit and hovered_unit.current_hp > 0:
 				var min_dist = _get_min_distance_to_unit(active_unit, hovered_unit)
@@ -102,10 +141,13 @@ func _process(_delta):
 							if hovered_unit == active_unit: valid = true
 							
 					if valid:
-						# Тут використовуй свою функцію розрахунку шансу
 						var chance = active_unit.get_hit_chance(hovered_unit)
 						$UI.show_hover_label(chance)
-						
+
+
+# ==========================================
+# ОБРОБКА ВВОДУ (Універсальна)
+# ==========================================
 func _unhandled_input(event):
 	if is_moving or (active_unit and active_unit.team != 0):
 		return
@@ -115,50 +157,67 @@ func _unhandled_input(event):
 		skip_turn()
 		return
 		
-	if event is InputEventMouseButton and event.pressed:
-		# --- ПКМ: Скасування дії ---
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			if current_action != "move":
-				current_action = "move"
-				active_unit.calculate_reachable_cells()
-			return
+	# Скасування дії на ПКМ
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if current_action != "move":
+			current_action = "move"
+			active_unit.calculate_reachable_cells()
+			$UI.hide_target_panel()
+			is_touching = false
+		return
 
-		# --- ЛКМ: Виконання дії ---
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			if not is_instance_valid(active_unit) or active_unit.is_exhausted:
-				return
-			
-			var m_cell = $Grid.world_to_cell($Grid.get_local_mouse_position())
-			var clicked_unit = $Grid.get_unit_at(m_cell)
-			
-			match current_action:
-				"move":
-					await _handle_move_action(m_cell, clicked_unit)
-				"use_skill":
-					await _handle_attack_action(clicked_unit)
+	# --- Гібридна логіка Тапів / Кліків ---
+	var is_press_event = (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch)
+	var is_drag_event = (event is InputEventMouseMotion) or (event is InputEventScreenDrag)
+
+	if is_press_event:
+		if event.pressed:
+			# Початок кліку/дотику
+			is_touching = true
+			long_press_triggered = false
+			touch_start_time = Time.get_ticks_msec()
+			touch_start_pos = event.position
+		else:
+			# Відпускання (Кінець кліку/дотику)
+			if is_touching:
+				is_touching = false
+				
+				# Якщо ми не тримали довго (Короткий тап) - виконуємо дію!
+				if not long_press_triggered:
+					var canvas_transform = get_canvas_transform()
+					var world_pos = canvas_transform.affine_inverse() * touch_start_pos
+					var m_cell = $Grid.world_to_cell($Grid.to_local(world_pos))
+					var clicked_unit = $Grid.get_unit_at(m_cell)
+					
+					match current_action:
+						"move":
+							await _handle_move_action(m_cell, clicked_unit)
+						"use_skill":
+							await _handle_attack_action(clicked_unit)
+							
+	elif is_drag_event and is_touching:
+		# Якщо гравець свайпає екран (відхилення більше 15 пікселів) - скасовуємо довгий натиск
+		if event.position.distance_to(touch_start_pos) > 15:
+			is_touching = false
+			long_press_triggered = false
 
 # ==========================================
 # ЛОГІКА ДІЙ (Рух та Атака)
 # ==========================================
 func _handle_move_action(m_cell: Vector2i, clicked_unit: Node2D) -> void:
-	# ФІКС 1: Блокуємо рух, ТІЛЬКИ якщо клікнули на ІНШОГО юніта
 	if clicked_unit != null and clicked_unit != active_unit:
-		# Перевіряємо чи можна автоматично атакувати першим скілом
 		if clicked_unit.team != active_unit.team and active_unit.skills.size() > 0:
 			var first_skill = active_unit.skills[0]
 			if first_skill.target_type == Skill.TargetType.ENEMY:
 				var min_dist = _get_min_distance_to_unit(active_unit, clicked_unit)
 				if min_dist <= first_skill.range and active_unit.current_ap >= first_skill.ap_cost:
-					# Автоматично атакуємо першим скілом!
 					active_skill = first_skill
 					await _handle_attack_action(clicked_unit)
-					return
 		return
 		
 	var target_tl = $Grid.get_top_left_from_mouse(m_cell, active_unit.size)
 	
 	if active_unit.reachable_cells.has(target_tl):
-		# ФІКС 2: Якщо ми клікнули рівно туди, де вже стоїмо — просто ігноруємо, щоб не витрачати AP
 		if target_tl == active_unit.grid_position:
 			return
 			
@@ -191,17 +250,13 @@ func _handle_attack_action(clicked_unit: Node2D) -> void:
 	if min_dist > active_skill.range:
 		return
 
-	# Перевірка типу цілі
 	match active_skill.target_type:
 		Skill.TargetType.ENEMY:
-			if clicked_unit.team == active_unit.team:
-				return
+			if clicked_unit.team == active_unit.team: return
 		Skill.TargetType.ALLY:
-			if clicked_unit.team != active_unit.team:
-				return
+			if clicked_unit.team != active_unit.team: return
 		Skill.TargetType.SELF:
-			if clicked_unit != active_unit:
-				return
+			if clicked_unit != active_unit: return
 
 	if active_unit.current_ap >= active_skill.ap_cost:
 		$UI.hide_target_panel()
@@ -246,12 +301,10 @@ func start_turn():
 	$Grid.hover_cell = active_unit.grid_position
 	$Grid.queue_redraw()
 	
-	# Фокус камери
 	if is_instance_valid(active_unit) and has_node("Camera2D"):
 		var unit_center = active_unit.position + (Vector2(active_unit.size) * $Grid.cell_size) / 2.0
 		$Camera2D.focus_on_position(unit_center)
 		
-	# Хід ШІ
 	if active_unit.team != 0:
 		is_moving = true
 		await active_unit.execute_ai()
@@ -261,16 +314,16 @@ func start_turn():
 func _on_skill_selected(skill: Skill):
 	current_action = "use_skill"
 	active_skill = skill
-	# Підсвітити зону застосування скілу
-	var target_cells = active_unit.get_skill_target_cells(skill)
+	is_auto_aiming = false # Блокуємо відключення скілу через ховер
 	
-	var color = Color(0, 1, 0, 0.15) # За замовчуванням - зелений
+	var target_cells = active_unit.get_skill_target_cells(skill)
+	var color = Color(0, 1, 0, 0.15)
 	if skill.target_type == Skill.TargetType.ENEMY:
 		color = Color(0.8, 0.1, 0.1, 0.5)
 	else:
 		color = Color(0.1, 0.8, 0.1, 0.5)
 
-	$Grid.set_highlight(target_cells, Vector2i(1, 1), color) # Vector2i(1, 1) розмір підсвітки, впливає на range скілів, color - колір підсвітки
+	$Grid.set_highlight(target_cells, Vector2i(1, 1), color)
 
 func next_turn():
 	if is_instance_valid(active_unit):
@@ -298,9 +351,7 @@ func _on_btn_attack_pressed():
 	if is_moving or not is_instance_valid(active_unit) or active_unit.is_exhausted: return
 	if active_unit.team != 0: return
 		
-	# ФІКС: Просимо UI зняти фокус
 	$UI.release_focuses()
-	
 	current_action = "attack"
 	
 	var attack_cells = active_unit.get_attackable_cells()
