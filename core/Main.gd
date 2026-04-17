@@ -266,6 +266,10 @@ func _handle_attack_action(clicked_unit: Node2D) -> void:
 		
 		if clicked_unit.current_hp <= 0:
 			units.erase(clicked_unit)
+			
+			if current_index >= units.size(): current_index = 0
+			$UI.update_turn_queue(units, current_index)
+			
 			await clicked_unit.die()
 		
 		current_action = "move"
@@ -296,6 +300,9 @@ func start_turn():
 	active_unit = units[current_index]
 	active_unit.reset_ap()
 	$UI.setup_skill_buttons(active_unit.skills)
+	
+	$UI.update_turn_queue(units, current_index)
+	
 	active_unit.calculate_reachable_cells()
 	
 	$Grid.hover_cell = active_unit.grid_position

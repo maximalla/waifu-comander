@@ -19,6 +19,7 @@ extends Node2D
 @export var crit_chance := 10 # Шанс критичного удару (10%)
 @export var skills: Array[Skill]
 @export_group("Visuals")
+@export var portrait: Texture2D
 # Сцена снаряда, яку цей юніт використовує для дальніх атак
 @export var projectile_scene: PackedScene
 

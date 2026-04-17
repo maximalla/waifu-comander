@@ -13,6 +13,7 @@ size = Vector2i(1, 1)
 attack_range = 4
 evasion = 50
 skills = Array[ExtResource("3_pmapi")]([ExtResource("4_7e6tb")])
+portrait = ExtResource("6_pmapi")
 projectile_scene = ExtResource("3_2cmh8")
 
 [node name="Sprite2D" parent="." index="0" unique_id=821534345]

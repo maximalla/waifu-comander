@@ -10,6 +10,7 @@
 [node name="Warrior" unique_id=756538143 instance=ExtResource("1_kjye7")]
 script = ExtResource("2_13sk1")
 skills = Array[ExtResource("3_mojf1")]([ExtResource("4_fbof8"), ExtResource("5_fbof8")])
+portrait = ExtResource("6_kve1q")
 
 [node name="Sprite2D" parent="." index="0" unique_id=821534345]
 position = Vector2(968, 722)
