@@ -53,11 +53,10 @@ func _try_attack(target: Node2D) -> bool:
 			# Робимо паузу для краси, щоб гравець побачив політ "стріли" і цифри шкоди
 			await get_tree().create_timer(0.5).timeout
 			
-			# Перевіряємо, чи не вбили ми ціль (бо execute_ranged_attack не має вбудованої перевірки смерті ШІ)
+			# Перевіряємо, чи не вбили ми ціль
 			if target.current_hp <= 0:
 				var main_node = grid.get_parent()
-				main_node.units.erase(target)
-				await target.die()
+				await main_node._process_unit_death(target)
 				
 			return true
 			

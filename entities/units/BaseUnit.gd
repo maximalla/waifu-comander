@@ -197,8 +197,7 @@ func move_to(target_cell: Vector2i):
 		
 		if current_hp <= 0:
 			var main_node = grid.get_parent()
-			main_node.units.erase(self )
-			await die()
+			await main_node._process_unit_death(self)
 			return
 			
 	grid.clear_area(grid_position, size)
@@ -622,5 +621,4 @@ func ai_attack(target: Node2D):
 	
 	if target.current_hp <= 0:
 		var main_node = grid.get_parent()
-		main_node.units.erase(target)
-		await target.die()
+		await main_node._process_unit_death(target)

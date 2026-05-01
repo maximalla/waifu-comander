@@ -167,3 +167,26 @@ func show_hover_label(chance: int):
 
 func hide_hover_label():
 	if hover_label: hover_label.visible = false
+
+# ==========================================
+# РЕЗУЛЬТАТ БОЮ
+# ==========================================
+func show_result(is_victory: bool, captured_count: int):
+	var dialog = AcceptDialog.new()
+	dialog.title = "Кінець бою"
+	
+	if is_victory:
+		var text = "ПЕРЕМОГА!\n\n"
+		if captured_count > 0:
+			text += "Ваш загін здобув тріумф. Ви захопили " + str(captured_count) + " ворогів у полон!"
+		else:
+			text += "Ваш загін здобув тріумф, але ворог втік без полонених."
+		dialog.dialog_text = text
+	else:
+		dialog.dialog_text = "ПОРАЗКА...\n\nВаші сили вичерпано. Загін змушений відступити."
+	
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(400, 200))
+	
+	# Після закриття вікна можна, наприклад, повернутися в меню або перезапустити сцену
+	dialog.confirmed.connect(func(): get_tree().reload_current_scene())

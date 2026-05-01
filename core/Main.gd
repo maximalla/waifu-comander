@@ -10,6 +10,7 @@ extends Node2D
 # СТАН ГРИ (Змінні)
 # ==========================================
 var units := []
+var defeated_enemies := [] # Список переможених ворогів для розрахунку полонених
 var current_index := 0
 var active_unit: Node2D
 var targeted_enemy: Node2D = null # Ворог, якого ми виділили для атаки
@@ -265,12 +266,7 @@ func _handle_attack_action(clicked_unit: Node2D) -> void:
 		await active_unit.use_skill(clicked_unit, active_skill)
 		
 		if clicked_unit.current_hp <= 0:
-			units.erase(clicked_unit)
-			
-			if current_index >= units.size(): current_index = 0
-			$UI.update_turn_queue(units, current_index)
-			
-			await clicked_unit.die()
+			await _process_unit_death(clicked_unit)
 		
 		current_action = "move"
 		if active_unit.current_ap <= 0:
@@ -352,8 +348,60 @@ func skip_turn():
 		next_turn()
 
 # ==========================================
-# СИГНАЛИ UI
+# ЗАВЕРШЕННЯ БОЮ ТА ЗАХОПЛЕННЯ
 # ==========================================
+func _process_unit_death(unit: Node2D):
+	if unit.team != 0:
+		# Зберігаємо дані юніта перед видаленням
+		var unit_data = {
+			"name": unit.name,
+			"portrait": unit.portrait,
+			"scene": unit.scene_file_path if "scene_file_path" in unit else unit.filename
+		}
+		defeated_enemies.append(unit_data)
+	
+	units.erase(unit)
+	
+	# Оновлюємо індекс, щоб не вилетіти за межі масиву
+	if current_index >= units.size() and units.size() > 0:
+		current_index = 0
+		
+	$UI.update_turn_queue(units, current_index)
+	await unit.die()
+	
+	_check_battle_end()
+
+func _check_battle_end():
+	var player_alive = false
+	var enemy_alive = false
+	
+	for u in units:
+		if u.team == 0: player_alive = true
+		else: enemy_alive = true
+	
+	if not enemy_alive:
+		_end_battle(true)
+	elif not player_alive:
+		_end_battle(false)
+
+func _end_battle(is_victory: bool):
+	is_moving = true 
+	
+	if is_victory:
+		var potential_captures := []
+		if defeated_enemies.size() > 0:
+			var count = max(1, int(defeated_enemies.size() * 0.2))
+			defeated_enemies.shuffle()
+			for i in range(min(count, defeated_enemies.size())):
+				potential_captures.append(defeated_enemies[i])
+		
+		if $UI.has_method("show_capture_screen"):
+			$UI.show_capture_screen(potential_captures)
+		else:
+			# Фолбек, якщо новий екран ще не готовий
+			$UI.show_result(true, potential_captures.size())
+	else:
+		$UI.show_result(false, 0)
 func _on_btn_attack_pressed():
 	if is_moving or not is_instance_valid(active_unit) or active_unit.is_exhausted: return
 	if active_unit.team != 0: return
