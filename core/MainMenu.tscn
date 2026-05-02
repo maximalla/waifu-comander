@@ -1,0 +1,56 @@
+[gd_scene format=3 uid="uid://c7usfkmm4xpeu"]
+
+[ext_resource type="Script" uid="uid://bvcsosilujxgi" path="res://core/MainMenu.gd" id="1_50165"]
+
+[node name="MainMenu" type="Control" unique_id=1798213006]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_50165")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1487691514]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.41598046, 0.41598043, 0.4159804, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1542602325]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer" unique_id=764676634]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "WAIFU COMMANDER"
+
+[node name="BtnPlay" type="Button" parent="VBoxContainer" unique_id=1564158551]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "ГРАТИ"
+
+[node name="BtnSandbox" type="Button" parent="VBoxContainer" unique_id=1117557796]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "ПІСОЧНИЦЯ"
+
+[node name="BtnExit" type="Button" parent="VBoxContainer" unique_id=357603177]
+custom_minimum_size = Vector2(200, 60)
+layout_mode = 2
+text = "ВИХІД"

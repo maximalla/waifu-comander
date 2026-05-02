@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="Waifu-Comander"
-run/main_scene="uid://du6xukpttxp5j"
+run/main_scene="uid://c7usfkmm4xpeu"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+GameManager="*uid://gklomf0b7o3u"
 
 [physics]
 
