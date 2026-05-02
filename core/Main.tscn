@@ -1,8 +1,6 @@
 [gd_scene format=3 uid="uid://du6xukpttxp5j"]
 
 [ext_resource type="Script" uid="uid://yw6rxbj85ib7" path="res://core/Main.gd" id="1_5id70"]
-[ext_resource type="PackedScene" uid="uid://6q0st4lfraqq" path="res://entities/units/Archer.tscn" id="2_81sye"]
-[ext_resource type="PackedScene" uid="uid://b2ntmc51pky0f" path="res://entities/units/Warrior.tscn" id="3_btyjs"]
 [ext_resource type="Script" uid="uid://dbsgxdgbc2qob" path="res://core/Grid.gd" id="4_djhfk"]
 [ext_resource type="PackedScene" uid="uid://d0f081qwke7le" path="res://entities/environment/Obstacle.tscn" id="5_5rkby"]
 [ext_resource type="Texture2D" uid="uid://c1owpc5nbunh3" path="res://assets/textures/environment/obstacles/tree1.png" id="6_m8xq2"]
@@ -15,8 +13,6 @@
 
 [node name="Main" type="Node2D" unique_id=2068877941]
 script = ExtResource("1_5id70")
-player_roster = Array[PackedScene]([ExtResource("2_81sye"), ExtResource("2_81sye"), ExtResource("3_btyjs")])
-enemy_roster = Array[PackedScene]([ExtResource("2_81sye"), ExtResource("3_btyjs")])
 
 [node name="Grid" type="Node2D" parent="." unique_id=1614167976]
 y_sort_enabled = true
@@ -125,6 +121,22 @@ offset_bottom = 17.76
 grow_horizontal = 2
 theme_override_constants/separation = 10
 alignment = 1
+
+[node name="BtnRestart" type="Button" parent="UI" unique_id=1042334770]
+visible = false
+custom_minimum_size = Vector2(200, 80)
+anchors_preset = -1
+anchor_left = 0.46600002
+anchor_top = -0.040000003
+anchor_right = 0.46600002
+anchor_bottom = -0.040000003
+offset_left = -99.83203
+offset_top = -40.079998
+offset_right = 100.16797
+offset_bottom = 39.920002
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 32
+text = "Рестарт"
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1906602550]
 position_smoothing_enabled = true

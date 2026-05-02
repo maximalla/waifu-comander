@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://bm8qdoghcvq1p"]
+
+[ext_resource type="Script" uid="uid://cugutjqnvvm4s" path="res://core/SandboxSetup.gd" id="1_fnv5y"]
+
+[node name="SandboxSetup" type="Control" unique_id=784710683]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fnv5y")

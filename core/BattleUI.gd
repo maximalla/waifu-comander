@@ -3,6 +3,9 @@ extends CanvasLayer
 
 signal skill_selected(skill: Skill)
 signal end_turn_pressed
+signal restart_pressed
+
+@onready var btn_restart = $BtnRestart
 
 @onready var panel = $Panel
 @onready var hbox = $Panel/HBoxContainer
@@ -26,6 +29,10 @@ var is_mobile := false
 
 func _ready():
 	btn_end_turn.pressed.connect(func(): end_turn_pressed.emit())
+	btn_restart.pressed.connect(func(): restart_pressed.emit()) # ДОДАНО
+
+	# === ВІДРАЗУ ПЕРЕДАЄМО СТАН З СИНГЛТОНА ===
+	btn_restart.visible = GameManager.is_sandbox_mode
 	
 	var os_name = OS.get_name()
 	is_mobile = os_name in ["Android", "iOS"]

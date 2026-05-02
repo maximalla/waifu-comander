@@ -1,12 +1,6 @@
 extends Node2D
 
 # ==========================================
-# НАЛАШТУВАННЯ (Exports)
-# ==========================================
-@export var player_roster: Array[PackedScene]
-@export var enemy_roster: Array[PackedScene]
-
-# ==========================================
 # СТАН ГРИ (Змінні)
 # ==========================================
 var units := []
@@ -34,6 +28,7 @@ func _ready():
 	# Підключення кнопок UI
 	$UI.end_turn_pressed.connect(skip_turn)
 	$UI.skill_selected.connect(_on_skill_selected)
+	$UI.restart_pressed.connect(_on_restart)
 	
 	# Налаштування камери
 	var map_width = $Grid.grid_size.x * $Grid.cell_size
@@ -41,9 +36,12 @@ func _ready():
 	$Camera2D.setup_limits(map_width, map_height, 300.0)
 	$Camera2D.position = Vector2(map_width / 2.0, map_height / 2.0)
 	
+	# === Беремо ростери з GameManager ===
+	if GameManager.player_roster.is_empty():
+		GameManager.load_default_rosters() # Заглушка, якщо запустили сцену напряму
 	# Генерація карти та старт гри
 	if has_node("MapGenerator"):
-		$MapGenerator.generate_battle(player_roster, enemy_roster)
+		$MapGenerator.generate_battle(GameManager.player_roster, GameManager.enemy_roster)
 	else:
 		push_error("Не знайдено вузол MapGenerator!")
 	
@@ -145,12 +143,19 @@ func _process(_delta):
 						var chance = active_unit.get_hit_chance(hovered_unit)
 						$UI.show_hover_label(chance)
 
+func _on_restart():
+	get_tree().reload_current_scene()
+
 
 # ==========================================
 # ОБРОБКА ВВОДУ (Універсальна)
 # ==========================================
 func _unhandled_input(event):
-	if is_moving or (active_unit and active_unit.team != 0):
+	if is_moving:
+		return
+		
+	# Блокуємо керування ворогами ТІЛЬКИ якщо це звичайна гра
+	if active_unit and active_unit.team != 0 and not GameManager.is_sandbox_mode:
 		return
 	
 	# Пропуск ходу клавіатурою
@@ -309,10 +314,16 @@ func start_turn():
 		$Camera2D.focus_on_position(unit_center)
 		
 	if active_unit.team != 0:
-		is_moving = true
-		await active_unit.execute_ai()
-		is_moving = false
-		next_turn()
+		if GameManager.is_sandbox_mode:
+			# ПІСОЧНИЦЯ: ШІ вимкнено, чекаємо дій від гравця. 
+			# Кнопки скілів у UI вже підключилися на початку start_turn.
+			pass
+		else:
+			# ЗВИЧАЙНА ГРА: Запускаємо ШІ
+			is_moving = true
+			await active_unit.execute_ai()
+			is_moving = false
+			next_turn()
 
 func _on_skill_selected(skill: Skill):
 	current_action = "use_skill"
@@ -386,7 +397,7 @@ func _check_battle_end():
 		_end_battle(false)
 
 func _end_battle(is_victory: bool):
-	is_moving = true 
+	is_moving = true
 	
 	if is_victory:
 		var potential_captures := []

@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" uid="uid://clai2egyt6gy0" path="res://assets/textures/units/elves/elf swordmaster.png" id="6_kve1q"]
 
 [node name="Warrior" unique_id=756538143 instance=ExtResource("1_kjye7")]
-unit_name = "Воїн"
 script = ExtResource("2_13sk1")
+unit_name = "Воїн"
 skills = Array[ExtResource("3_mojf1")]([ExtResource("4_fbof8"), ExtResource("5_fbof8")])
 portrait = ExtResource("6_kve1q")
 
