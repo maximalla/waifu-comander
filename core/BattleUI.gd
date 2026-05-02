@@ -223,8 +223,11 @@ func show_capture_screen(units_data: Array):
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	layout.add_child(scroll)
 	
-	var list = VBoxContainer.new()
+	var list = HFlowContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.alignment = FlowContainer.ALIGNMENT_CENTER
+	list.add_theme_constant_override("h_separation", 15)
+	list.add_theme_constant_override("v_separation", 15)
 	scroll.add_child(list)
 	
 	var captured_indices = {} # Запам'ятовуємо вибір
@@ -237,56 +240,42 @@ func show_capture_screen(units_data: Array):
 	else:
 		for i in range(units_data.size()):
 			var data = units_data[i]
-			var row = HBoxContainer.new()
-			row.custom_minimum_size.y = 80
-			list.add_child(row)
+			
+			# Створюємо блок юніта як кнопку
+			var unit_btn = Button.new()
+			unit_btn.toggle_mode = true
+			unit_btn.custom_minimum_size = Vector2(160, 200)
+			list.add_child(unit_btn)
+			
+			var vbox = VBoxContainer.new()
+			vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+			unit_btn.add_child(vbox)
 			
 			var icon = TextureRect.new()
 			icon.texture = data.portrait
-			icon.custom_minimum_size = Vector2(80, 80)
+			icon.custom_minimum_size = Vector2(120, 120)
 			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			row.add_child(icon)
+			icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			vbox.add_child(icon)
 			
 			var name_lbl = Label.new()
-			print(data)
 			name_lbl.text = data.name
-			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			name_lbl.add_theme_font_size_override("font_size", 24)
-			row.add_child(name_lbl)
+			name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			name_lbl.add_theme_font_size_override("font_size", 18)
+			vbox.add_child(name_lbl)
 			
-			var btn_group = HBoxContainer.new()
-			row.add_child(btn_group)
-			
-			var btn_take = Button.new()
-			btn_take.text = "ЗАХОПИТИ"
-			btn_take.toggle_mode = true
-			btn_take.custom_minimum_size.x = 120
-			
-			var btn_leave = Button.new()
-			btn_leave.text = "ПОКИНУТИ"
-			btn_leave.custom_minimum_size.x = 120
-			
-			btn_take.toggled.connect(func(pressed):
+			unit_btn.toggled.connect(func(pressed):
 				if pressed:
 					captured_indices[i] = true
-					row.modulate = Color(0.5, 1.0, 0.5)
-					btn_take.text = "ВЗЯТО"
+					unit_btn.modulate = Color(0.6, 1.2, 0.6) # Підсвітка при виборі
 				else:
 					captured_indices.erase(i)
-					row.modulate = Color(1, 1, 1)
-					btn_take.text = "ЗАХОПИТИ"
+					unit_btn.modulate = Color(1, 1, 1)
 			)
-			
-			btn_leave.pressed.connect(func():
-				row.modulate = Color(0.5, 0.5, 0.5, 0.5)
-				btn_take.button_pressed = false
-				btn_take.disabled = true
-				btn_leave.disabled = true
-			)
-			
-			btn_group.add_child(btn_take)
-			btn_group.add_child(btn_leave)
 	
 	layout.add_child(HSeparator.new())
 	
