@@ -93,7 +93,7 @@ func _process(_delta):
 							var chance = active_unit.get_hit_chance(hovered_unit)
 							var expected_dmg = abs(first_skill.base_damage)
 							var crit = active_unit.crit_chance
-							$UI.show_target_panel(hovered_unit.name, chance, expected_dmg, crit)
+							$UI.show_target_panel(hovered_unit.unit_name, chance, expected_dmg, crit)
 							targeted_enemy = hovered_unit
 						else:
 							# Якщо ворог далеко, ховаємо панель (якщо вона була відкрита)
@@ -353,8 +353,9 @@ func skip_turn():
 func _process_unit_death(unit: Node2D):
 	if unit.team != 0:
 		# Зберігаємо дані юніта перед видаленням
+		print(unit)
 		var unit_data = {
-			"name": unit.name,
+			"name": unit.unit_name,
 			"portrait": unit.portrait,
 			"scene": unit.scene_file_path if "scene_file_path" in unit else unit.filename
 		}

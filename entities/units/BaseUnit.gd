@@ -5,6 +5,7 @@ extends Node2D
 # ХАРАКТЕРИСТИКИ ЮНІТА (Exports)
 # ==========================================
 @export_group("Basic Stats")
+@export var unit_name: String = "Невідомий юніт"
 @export var team := 0 # 0 = Гравець, 1 = Ворог
 @export var size := Vector2i(2, 3)
 @export var max_ap := 6
@@ -13,7 +14,7 @@ extends Node2D
 @export_group("Combat Stats")
 @export var attack_range := 1 # 1 = ближній бій, 2+ = лук або магія
 @export var melee_damage := 4
-@export var attack_ap_cost :=  4
+@export var attack_ap_cost := 4
 @export var accuracy := 100 # Базовий шанс влучити (100%)
 @export var evasion := 0 # Шанс ухилитися (0-30%)
 @export var crit_chance := 10 # Шанс критичного удару (10%)
@@ -197,7 +198,7 @@ func move_to(target_cell: Vector2i):
 		
 		if current_hp <= 0:
 			var main_node = grid.get_parent()
-			await main_node._process_unit_death(self)
+			await main_node._process_unit_death(self )
 			return
 			
 	grid.clear_area(grid_position, size)

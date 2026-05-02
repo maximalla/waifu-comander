@@ -9,6 +9,7 @@
 
 [node name="Archer" unique_id=756538143 instance=ExtResource("1_hgo2b")]
 script = ExtResource("2_3lvsr")
+unit_name = "Лучниця"
 size = Vector2i(1, 1)
 attack_range = 4
 evasion = 50

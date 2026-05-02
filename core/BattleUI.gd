@@ -168,9 +168,143 @@ func show_hover_label(chance: int):
 func hide_hover_label():
 	if hover_label: hover_label.visible = false
 
-# ==========================================
-# РЕЗУЛЬТАТ БОЮ
-# ==========================================
+# =========================================
+# ЕКРАН ЗАХОПЛЕННЯ ПОЛОНЕНИХ
+# =========================================
+func show_capture_screen(units_data: Array):
+	# 1. Створюємо ізольований шар, щоб обійти баг зі зміщенням
+	var popup_layer = CanvasLayer.new()
+	popup_layer.layer = 100 # Гарантовано поверх усього іншого
+	add_child(popup_layer)
+	
+	# 2. Створюємо фон-затемнення
+	var overlay = ColorRect.new()
+	overlay.color = Color(0, 0, 0, 0.75)
+	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	popup_layer.add_child(overlay)
+	
+	# 3. Використовуємо CenterContainer для ідеального центрування
+	var center = CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	overlay.add_child(center)
+	
+	# 4. Створюємо головну панель (БЕЗ ручного PRESET_CENTER)
+	var main_panel = PanelContainer.new()
+	main_panel.custom_minimum_size = Vector2(600, 450)
+	center.add_child(main_panel)
+	
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	main_panel.add_child(margin)
+	
+	var layout = VBoxContainer.new()
+	margin.add_child(layout)
+	
+	# ... далі ВВЕСЬ твій старий код без змін, починаючи зі створення title ...
+	var title = Label.new()
+	title.text = "ТРОФЕЇ ТА ПОЛОНЕНІ"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 32)
+	layout.add_child(title)
+	
+	var desc = Label.new()
+	desc.text = "Ви можете захопити частину розбитих сил ворога. Виберіть, кого взяти з собою:"
+	desc.autowrap_mode = TextServer.AUTOWRAP_WORD
+	desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(desc)
+	
+	layout.add_child(HSeparator.new())
+	
+	# Контейнер для списку юнітів
+	var scroll = ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(scroll)
+	
+	var list = VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(list)
+	
+	var captured_indices = {} # Запам'ятовуємо вибір
+	
+	if units_data.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "\nНікого не вдалося захопити..."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		list.add_child(empty_lbl)
+	else:
+		for i in range(units_data.size()):
+			var data = units_data[i]
+			var row = HBoxContainer.new()
+			row.custom_minimum_size.y = 80
+			list.add_child(row)
+			
+			var icon = TextureRect.new()
+			icon.texture = data.portrait
+			icon.custom_minimum_size = Vector2(80, 80)
+			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			row.add_child(icon)
+			
+			var name_lbl = Label.new()
+			print(data)
+			name_lbl.text = data.name
+			name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			name_lbl.add_theme_font_size_override("font_size", 24)
+			row.add_child(name_lbl)
+			
+			var btn_group = HBoxContainer.new()
+			row.add_child(btn_group)
+			
+			var btn_take = Button.new()
+			btn_take.text = "ЗАХОПИТИ"
+			btn_take.toggle_mode = true
+			btn_take.custom_minimum_size.x = 120
+			
+			var btn_leave = Button.new()
+			btn_leave.text = "ПОКИНУТИ"
+			btn_leave.custom_minimum_size.x = 120
+			
+			btn_take.toggled.connect(func(pressed):
+				if pressed:
+					captured_indices[i] = true
+					row.modulate = Color(0.5, 1.0, 0.5)
+					btn_take.text = "ВЗЯТО"
+				else:
+					captured_indices.erase(i)
+					row.modulate = Color(1, 1, 1)
+					btn_take.text = "ЗАХОПИТИ"
+			)
+			
+			btn_leave.pressed.connect(func():
+				row.modulate = Color(0.5, 0.5, 0.5, 0.5)
+				btn_take.button_pressed = false
+				btn_take.disabled = true
+				btn_leave.disabled = true
+			)
+			
+			btn_group.add_child(btn_take)
+			btn_group.add_child(btn_leave)
+	
+	layout.add_child(HSeparator.new())
+	
+	var btn_confirm = Button.new()
+	btn_confirm.text = "ПІДТВЕРДИТИ ВИБІР"
+	btn_confirm.custom_minimum_size.y = 50
+	btn_confirm.add_theme_font_size_override("font_size", 24)
+	layout.add_child(btn_confirm)
+	
+	btn_confirm.pressed.connect(func():
+		var final_captured = []
+		for idx in captured_indices.keys():
+			final_captured.append(units_data[idx])
+		
+		print("ГРАВЕЦЬ ЗАХОПИВ: ", final_captured.size(), " юнітів")
+		# Тут можна додати логіку збереження в інвентар/ростер
+		get_tree().reload_current_scene()
+	)
 func show_result(is_victory: bool, captured_count: int):
 	var dialog = AcceptDialog.new()
 	dialog.title = "Кінець бою"
